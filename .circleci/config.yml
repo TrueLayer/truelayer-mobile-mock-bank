@@ -1,0 +1,108 @@
+version: 2.1
+
+orbs:
+  rn: react-native-community/react-native@7.1.1
+
+jobs:
+  analyse_js:
+    executor: rn/linux_js
+    steps:
+      - attach_workspace:
+          at: .
+      - rn/yarn_install
+      - run:
+          command: yarn eslint
+          name: Run ESLint
+      - run:
+          command: yarn jest --passWithNoTests
+          name: Jest
+  checkout_code:
+    executor: rn/linux_js
+    steps:
+      - checkout
+      - persist_to_workspace:
+          paths: .
+          root: .
+  publish-github-release:
+    docker:
+      - image: circleci/golang:1.16
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete <<pipeline.git.tag>> ./android/app/build/outputs/apk/release
+
+workflows:
+  build-test:
+    jobs:
+      - checkout_code
+
+      - analyse_js:
+          requires:
+            - checkout_code
+
+      - rn/android_build:
+          build_type: release
+          on_after_initialize: |
+            echo $KEY_BASE64 | base64 -d > android/app/$KEY_STORE_FILE
+          requires:
+            - analyse_js
+
+      - rn/ios_build:
+          build_configuration: Release
+          device: iPhone 14
+          name: build_ios_release
+          project_path: ios/MockBank.xcworkspace
+          project_type: workspace
+          pod_install_directory: ios
+          xcode_version: 14.1.0
+          requires:
+            - analyse_js
+          scheme: MockBank
+  build-test-deploy:
+    jobs:
+      - checkout_code:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+            
+      - analyse_js:
+          requires:
+            - checkout_code
+          filters:
+            tags:
+              only: /.*/
+
+      - rn/android_build:
+          build_type: release
+          on_after_initialize: echo $KEY_BASE64 | base64 -d > android/app/$KEY_STORE_FILE
+          requires:
+            - analyse_js
+          filters:
+            tags:
+              only: /.*/
+
+      - rn/ios_build:
+          build_configuration: Release
+          device: iPhone 14
+          name: build_ios_release
+          project_path: ios/MockBank.xcworkspace
+          project_type: workspace
+          pod_install_directory: ios
+          xcode_version: 14.1.0
+          requires:
+            - analyse_js
+          scheme: MockBank
+
+      - publish-github-release:
+          context: org-global
+          requires:
+            - rn/android_build
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
