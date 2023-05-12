@@ -48,6 +48,7 @@ workflows:
           build_type: release
           on_after_initialize: |
             echo $KEY_BASE64 | base64 -d > android/app/$KEY_STORE_FILE
+          gradle_options: -Xmx2014m -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-XX:+UnlockExperimentalVMOptions -XX:+HeapDumpOnOutOfMemoryError -Xmx1024m"
           requires:
             - analyse_js
 
