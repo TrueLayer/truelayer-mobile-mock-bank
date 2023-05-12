@@ -8,7 +8,7 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
-import com.mockbank.ReactNativeFlipper;
+import com.truelayer.mockbank.ReactNativeFlipper;
 
 import java.util.List;
 
