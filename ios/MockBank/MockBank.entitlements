@@ -6,6 +6,7 @@
 	<array>
 		<string>applinks:pay-mock-connect.truelayer.com</string>
 		<string>applinks:pay-mock-connect.truelayer-sandbox.com</string>
+		<string>applinks:pay-mock-connect.t7r.dev</string>
 	</array>
 </dict>
 </plist>
