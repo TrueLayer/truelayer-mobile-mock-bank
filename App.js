@@ -28,11 +28,11 @@ import {
 
 const Action = ({title, onClick, color }): Node => {
   return (
-    <TouchableOpacity style={[{ width: "100%", padding: 12, margin: 10, backgroundColor: color }]}>
-      <Text
-        onPress={onClick}
-        style={[{textAlign: "center", fontWeight: "bold", color: "white"}]}
-      >
+    <TouchableOpacity 
+      onPress={onClick}
+      style={[{ width: "100%", padding: 12, margin: 10, backgroundColor: color }]}
+    >
+      <Text style={[{textAlign: "center", fontWeight: "bold", color: "white"}]}>
           {title}
       </Text>
     </TouchableOpacity>
@@ -81,10 +81,13 @@ const App: () => Node = () => {
     getUrlAsync();
   });
 
-  Linking.addEventListener('url', ({url}) => {
-    setUrl(url)
-    setParams(extractPaymentParams(url))
-  })
+  useEffect(() => {
+    const subscription = Linking.addEventListener('url', ({url}) => {
+      setUrl(url);
+      setParams(extractPaymentParams(url));
+    });
+    return () => subscription.remove();
+  }, []);
 
   const getEnvironmentUrl = (env) => {
     switch(env) {
